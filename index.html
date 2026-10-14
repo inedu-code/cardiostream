@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CardioStream – AI ECG Telemetry & Arrhythmia Prediction</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #0a1628;
+            line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ---------- BUTTONS ---------- */
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #e11d48, #be123c);
+            color: #fff;
+            font-weight: 600;
+            padding: 14px 36px;
+            border-radius: 40px;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(225, 29, 72, 0.35);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(225, 29, 72, 0.5);
+        }
+        .btn-secondary {
+            display: inline-block;
+            background: transparent;
+            color: #e11d48;
+            font-weight: 600;
+            padding: 14px 36px;
+            border-radius: 40px;
+            border: 2px solid #e11d48;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(225, 29, 72, 0.06);
+        }
+        .btn-outline-light {
+            display: inline-block;
+            background: transparent;
+            color: #fff;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-outline-light:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: #fb7185;
+        }
+        .btn-sm {
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 1px solid #d1d9e6;
+            background: #fff;
+            color: #475569;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .btn-sm:hover {
+            border-color: #e11d48;
+            color: #e11d48;
+        }
+        .btn-sm.active {
+            background: #e11d48;
+            color: #fff;
+            border-color: #e11d48;
+        }
+
+        /* ---------- HEADER / NAV ---------- */
+        header {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(225, 29, 72, 0.08);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 999;
+            padding: 10px 0;
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #0a1628;
+        }
+        .logo span {
+            color: #e11d48;
+        }
+        .logo .heart-icon {
+            display: inline-block;
+            margin-right: 4px;
+            color: #e11d48;
+            animation: heartbeat 1.5s infinite;
+        }
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            15% { transform: scale(1.2); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.15); }
+            60% { transform: scale(1); }
+        }
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            list-style: none;
+            font-weight: 500;
+            color: #475569;
+        }
+        .nav-links a {
+            transition: color 0.2s;
+        }
+        .nav-links a:hover {
+            color: #e11d48;
+        }
+        .nav-links .btn-primary {
+            padding: 8px 22px;
+            font-size: 0.85rem;
+        }
+        .hamburger {
+            display: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #0a1628;
+        }
+
+        /* ---------- HERO ---------- */
+        .hero {
+            padding: 150px 0 80px;
+            background: linear-gradient(145deg, #fff1f2 0%, #ffe4e6 40%, #ffffff 100%);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '❤️';
+            position: absolute;
+            top: -5%;
+            right: -3%;
+            font-size: 20rem;
+            opacity: 0.04;
+            transform: rotate(10deg);
+        }
+        .hero .container {
+            position: relative;
+            z-index: 2;
+        }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(225, 29, 72, 0.10);
+            color: #e11d48;
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(225, 29, 72, 0.12);
+        }
+        .hero-badge i {
+            margin-right: 8px;
+        }
+        .hero h1 {
+            font-size: 3.8rem;
+            font-weight: 800;
+            line-height: 1.12;
+            color: #0a1628;
+            max-width: 900px;
+            margin: 0 auto 20px;
+        }
+        .hero h1 .highlight {
+            background: linear-gradient(135deg, #e11d48, #fb7185);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            font-size: 1.25rem;
+            color: #475569;
+            max-width: 700px;
+            margin: 0 auto 40px;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .hero-stats {
+            margin-top: 50px;
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            flex-wrap: wrap;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 30px 40px;
+            border: 1px solid rgba(225, 29, 72, 0.08);
+        }
+        .hero-stats .stat-item {
+            text-align: center;
+        }
+        .hero-stats .stat-item .number {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #e11d48;
+        }
+        .hero-stats .stat-item .label {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        /* ---------- SECTIONS GENERAL ---------- */
+        section {
+            padding: 80px 0;
+        }
+        .section-title {
+            font-size: 2.6rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 16px;
+            color: #0a1628;
+        }
+        .section-title .highlight {
+            background: linear-gradient(135deg, #e11d48, #fb7185);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .section-sub {
+            text-align: center;
+            color: #64748b;
+            max-width: 720px;
+            margin: 0 auto 50px;
+            font-size: 1.2rem;
+        }
+        .section-light {
+            background: #ffffff;
+        }
+        .section-rose {
+            background: #fff1f2;
+        }
+
+        /* ---------- WHAT WE DO ---------- */
+        .what-we-do {
+            background: #ffffff;
+        }
+        .wwd-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+        .wwd-grid .text h3 {
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+            color: #0a1628;
+        }
+        .wwd-grid .text p {
+            color: #475569;
+            margin-bottom: 16px;
+        }
+        .wwd-grid .visual {
+            background: linear-gradient(135deg, #fff1f2, #ffe4e6);
+            border-radius: 24px;
+            padding: 40px;
+            text-align: center;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid rgba(225, 29, 72, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        .wwd-grid .visual .heart-bg {
+            position: absolute;
+            font-size: 12rem;
+            opacity: 0.04;
+            right: -20px;
+            bottom: -30px;
+            transform: rotate(-10deg);
+        }
+        .wwd-grid .visual i {
+            font-size: 4rem;
+            color: #e11d48;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 2;
+        }
+        .wwd-grid .visual p {
+            color: #475569;
+            position: relative;
+            z-index: 2;
+        }
+        .wwd-grid .visual .highlight-text {
+            color: #e11d48;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ---------- PLATFORM (AI FEATURES) ---------- */
+        .platform {
+            background: #fff1f2;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .feature-card {
+            background: #ffffff;
+            padding: 32px 24px;
+            border-radius: 20px;
+            border: 1px solid rgba(225, 29, 72, 0.06);
+            transition: 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #e11d48, #fb7185);
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+        .feature-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(225, 29, 72, 0.08);
+            border-color: rgba(225, 29, 72, 0.12);
+        }
+        .feature-card .icon-wrapper {
+            width: 56px;
+            height: 56px;
+            background: #fff1f2;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        .feature-card .icon-wrapper i {
+            font-size: 1.8rem;
+            color: #e11d48;
+        }
+        .feature-card h4 {
+            font-size: 1.2rem;
+            color: #0a1628;
+            margin-bottom: 10px;
+        }
+        .feature-card p {
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+        .feature-card .tag {
+            display: inline-block;
+            background: #fff1f2;
+            color: #e11d48;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 12px;
+            border-radius: 20px;
+            margin-top: 12px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* ---------- ECG DASHBOARD SIMULATOR ---------- */
+        .ecg-dash {
+            background: #ffffff;
+            padding: 60px 0;
+        }
+        .ecg-dash .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+        .ecg-dash .dash-main {
+            background: #fff1f2;
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid rgba(225, 29, 72, 0.06);
+        }
+        .ecg-dash .dash-main .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        .ecg-dash .dash-main .dash-header .status-text i {
+            color: #22c55e;
+            margin-right: 8px;
+        }
+        .ecg-dash .dash-main .ecg-monitor {
+            background: #0a1628;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(225, 29, 72, 0.15);
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+            min-height: 180px;
+        }
+        .ecg-dash .dash-main .ecg-monitor .ecg-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(225, 29, 72, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(225, 29, 72, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        .ecg-dash .dash-main .ecg-monitor .ecg-line {
+            position: relative;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+        }
+        .ecg-dash .dash-main .ecg-monitor .ecg-line svg {
+            width: 100%;
+            height: 120px;
+        }
+        .ecg-dash .dash-main .ecg-monitor .ecg-line svg .wave {
+            fill: none;
+            stroke: #fb7185;
+            stroke-width: 2;
+            filter: drop-shadow(0 0 4px rgba(251, 113, 133, 0.8));
+            stroke-dasharray: 2000;
+            stroke-dashoffset: 2000;
+            animation: drawWave 3s linear infinite;
+        }
+        @keyframes drawWave {
+            to { stroke-dashoffset: 0; }
+        }
+        .ecg-dash .dash-main .ecg-monitor .ecg-line svg .wave-anomaly {
+            fill: none;
+            stroke: #ef4444;
+            stroke-width: 2.5;
+            filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.9));
+            animation: pulseAnomaly 1s infinite;
+        }
+        @keyframes pulseAnomaly {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .ecg-dash .dash-main .ecg-monitor .ecg-label {
+            position: absolute;
+            top: 8px;
+            left: 12px;
+            color: #fb7185;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .ecg-dash .dash-main .ecg-monitor .ecg-hr {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            color: #fb7185;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        .ecg-dash .dash-main .ecg-monitor .ecg-hr span {
+            font-size: 0.6rem;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-left: 4px;
+        }
+        .ecg-dash .dash-main .patient-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .ecg-dash .dash-main .patient-grid .patient-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid rgba(225, 29, 72, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+        .ecg-dash .dash-main .patient-grid .patient-card:hover {
+            border-color: rgba(225, 29, 72, 0.2);
+        }
+        .ecg-dash .dash-main .patient-grid .patient-card .patient-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #e11d48;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .ecg-dash .dash-main .patient-grid .patient-card .patient-avatar.warning {
+            background: #f59e0b;
+        }
+        .ecg-dash .dash-main .patient-grid .patient-card .patient-avatar.danger {
+            background: #ef4444;
+            animation: pulseAvatar 1.2s infinite;
+        }
+        @keyframes pulseAvatar {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+        }
+        .ecg-dash .dash-main .patient-grid .patient-card .patient-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .ecg-dash .dash-main .patient-grid .patient-card .patient-info .patient-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #0a1628;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ecg-dash .dash-main .patient-grid .patient-card .patient-info .patient-rhythm {
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+        .ecg-dash .dash-main .patient-grid .patient-card .patient-info .patient-rhythm.afib {
+            color: #ef4444;
+            font-weight: 600;
+        }
+        .ecg-dash .dash-main .patient-grid .patient-card .patient-info .patient-rhythm.warning {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+        .ecg-dash .dash-sidebar {
+            background: #fff1f2;
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid rgba(225, 29, 72, 0.06);
+        }
+        .ecg-dash .dash-sidebar h4 {
+            color: #0a1628;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+        }
+        .ecg-dash .dash-sidebar .metric-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(225, 29, 72, 0.06);
+            font-size: 0.9rem;
+            color: #475569;
+        }
+        .ecg-dash .dash-sidebar .metric-item:last-child {
+            border-bottom: none;
+        }
+        .ecg-dash .dash-sidebar .metric-item .value {
+            font-weight: 700;
+        }
+        .ecg-dash .dash-sidebar .metric-item .value.good { color: #22c55e; }
+        .ecg-dash .dash-sidebar .metric-item .value.warning { color: #f59e0b; }
+        .ecg-dash .dash-sidebar .metric-item .value.danger { color: #ef4444; }
+        .ecg-dash .dash-sidebar .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(225, 29, 72, 0.06);
+            color: #475569;
+            font-size: 0.85rem;
+        }
+        .ecg-dash .dash-sidebar .alert-item:last-child {
+            border-bottom: none;
+        }
+        .ecg-dash .dash-sidebar .alert-item .alert-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+        .ecg-dash .dash-sidebar .alert-item .alert-icon.danger {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        .ecg-dash .dash-sidebar .alert-item .alert-icon.warning {
+            background: #fef3c7;
+            color: #f59e0b;
+        }
+        .ecg-dash .dash-sidebar .alert-item .alert-icon.success {
+            background: #dcfce7;
+            color: #22c55e;
+        }
+        .ecg-dash .dash-sidebar .alert-item .alert-time {
+            margin-left: auto;
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+        .ecg-dash .dash-sidebar .accuracy-bar {
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid rgba(225, 29, 72, 0.06);
+        }
+        .ecg-dash .dash-sidebar .accuracy-bar .bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        .ecg-dash .dash-sidebar .accuracy-bar .bar-track {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .ecg-dash .dash-sidebar .accuracy-bar .bar-track .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e11d48, #fb7185);
+            border-radius: 4px;
+            transition: width 1s ease;
+            width: 98%;
+        }
+
+        /* ---------- WHY CARDIOSTREAM ---------- */
+        .why {
+            background: #fff1f2;
+        }
+        .why-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 30px;
+            text-align: center;
+        }
+        .why-grid .why-item {
+            padding: 30px 20px;
+            border-radius: 20px;
+            background: #ffffff;
+            border: 1px solid rgba(225, 29, 72, 0.06);
+            transition: 0.3s;
+        }
+        .why-grid .why-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(225, 29, 72, 0.06);
+        }
+        .why-grid .why-item .number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #e11d48;
+        }
+        .why-grid .why-item p {
+            color: #475569;
+            font-weight: 500;
+        }
+
+        /* ---------- WHO WE SERVE ---------- */
+        .serve {
+            background: #ffffff;
+        }
+        .serve-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 30px;
+        }
+        .serve-card {
+            background: #fff1f2;
+            padding: 30px 20px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid rgba(225, 29, 72, 0.04);
+            transition: 0.3s;
+        }
+        .serve-card:hover {
+            border-color: rgba(225, 29, 72, 0.12);
+            transform: translateY(-4px);
+        }
+        .serve-card i {
+            font-size: 2.6rem;
+            color: #e11d48;
+            margin-bottom: 12px;
+        }
+        .serve-card h4 {
+            font-size: 1.2rem;
+            color: #0a1628;
+        }
+        .serve-card p {
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        /* ---------- TESTIMONIALS ---------- */
+        .testimonials {
+            background: #fff1f2;
+        }
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        .testimonial-card {
+            background: #ffffff;
+            padding: 28px 24px;
+            border-radius: 20px;
+            border: 1px solid rgba(225, 29, 72, 0.06);
+        }
+        .testimonial-card .quote {
+            font-size: 1rem;
+            color: #334155;
+            margin-bottom: 16px;
+            font-style: italic;
+        }
+        .testimonial-card .author {
+            font-weight: 600;
+            color: #0a1628;
+        }
+        .testimonial-card .role {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        .testimonial-card .stars {
+            color: #f59e0b;
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+        }
+
+        /* ---------- TEAM ---------- */
+        .team {
+            background: #ffffff;
+        }
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 35px;
+        }
+        .team-card {
+            text-align: center;
+            background: #fff1f2;
+            padding: 28px 20px 24px;
+            border-radius: 24px;
+            transition: 0.3s ease;
+            border: 1px solid transparent;
+        }
+        .team-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(225, 29, 72, 0.12);
+            box-shadow: 0 20px 40px rgba(225, 29, 72, 0.06);
+        }
+        .team-card .avatar-img {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #fff;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+            margin-bottom: 14px;
+        }
+        .team-card h4 {
+            font-size: 1.1rem;
+            color: #0a1628;
+            margin-bottom: 2px;
+        }
+        .team-card .title {
+            color: #e11d48;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .team-card .bio {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin: 8px 0 12px;
+        }
+        .team-card .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+        .team-card .social-icons a {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            transition: 0.2s;
+        }
+        .team-card .social-icons a:hover {
+            color: #e11d48;
+        }
+
+        /* ---------- CONTACT ---------- */
+        .contact {
+            background: #fff1f2;
+        }
+        .contact-wrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+        .contact-form input,
+        .contact-form textarea,
+        .contact-form select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid #d1d9e6;
+            border-radius: 12px;
+            font-size: 1rem;
+            margin-bottom: 16px;
+            background: #ffffff;
+            color: #0a1628;
+            transition: 0.2s;
+        }
+        .contact-form input:focus,
+        .contact-form textarea:focus,
+        .contact-form select:focus {
+            border-color: #e11d48;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.08);
+        }
+        .contact-form textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .contact-form select option {
+            background: #ffffff;
+        }
+        .contact-info p {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #475569;
+        }
+        .contact-info i {
+            width: 24px;
+            color: #e11d48;
+        }
+        .contact-info .emergency-box {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 16px;
+            border-left: 4px solid #e11d48;
+            margin-top: 20px;
+        }
+        .contact-info .emergency-box h4 {
+            color: #e11d48;
+        }
+
+        /* ---------- GET STARTED ---------- */
+        .get-started {
+            background: linear-gradient(135deg, #0a1628, #4c0519);
+            color: #fff;
+            text-align: center;
+        }
+        .get-started h2 {
+            font-size: 2.6rem;
+        }
+        .get-started h2 .highlight {
+            background: linear-gradient(135deg, #fb7185, #e11d48);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .get-started p {
+            color: #94a3b8;
+            max-width: 600px;
+            margin: 16px auto 32px;
+        }
+        .get-started .steps {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            margin: 40px 0 30px;
+        }
+        .get-started .steps .step {
+            flex: 1 1 180px;
+        }
+        .get-started .steps .step .num {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #fb7185;
+        }
+        .get-started .steps .step h4 {
+            color: #fff;
+        }
+        .get-started .steps .step p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        /* ---------- FOOTER ---------- */
+        footer {
+            background: #060e14;
+            color: #94a3b8;
+            padding: 40px 0 20px;
+            border-top: 1px solid rgba(225, 29, 72, 0.06);
+        }
+        footer .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        footer .footer-grid h4 {
+            color: #fff;
+            margin-bottom: 12px;
+        }
+        footer .footer-grid a {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+        footer .footer-grid a:hover {
+            color: #fb7185;
+        }
+        footer .bottom {
+            border-top: 1px solid rgba(255,255,255,0.04);
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+        }
+        footer .social i {
+            font-size: 1.4rem;
+            margin-left: 16px;
+            transition: 0.2s;
+        }
+        footer .social i:hover {
+            color: #fb7185;
+        }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 1024px) {
+            .ecg-dash .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 900px) {
+            .hero h1 { font-size: 2.6rem; }
+            .wwd-grid { grid-template-columns: 1fr; }
+            .contact-wrap { grid-template-columns: 1fr; }
+            footer .footer-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 700px) {
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                background: #ffffff;
+                position: absolute;
+                top: 64px;
+                left: 0;
+                width: 100%;
+                padding: 30px 24px;
+                gap: 18px;
+                border-bottom: 1px solid rgba(225, 29, 72, 0.08);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+            }
+            .nav-links.open {
+                display: flex;
+            }
+            .hamburger {
+                display: block;
+            }
+            .hero {
+                padding: 120px 0 60px;
+            }
+            .hero h1 { font-size: 2rem; }
+            .hero-stats {
+                gap: 30px;
+                padding: 20px;
+            }
+            .why-grid { grid-template-columns: 1fr 1fr; }
+            .testimonial-grid { grid-template-columns: 1fr; }
+            footer .footer-grid { grid-template-columns: 1fr; }
+            .ecg-dash .dash-main .patient-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <header>
+        <nav class="container">
+            <div class="logo"><span class="heart-icon">❤️</span>Cardio<span>Stream</span></div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#what">What We Do</a></li>
+                <li><a href="#platform">Platform</a></li>
+                <li><a href="#why">Why CardioStream</a></li>
+                <li><a href="#serve">Who We Serve</a></li>
+                <li><a href="#testimonials">Testimonials</a></li>
+                <li><a href="#team">Team</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="#getstarted" class="btn-primary">Get Started</a></li>
+            </ul>
+            <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+        </nav>
+    </header>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-badge"><i class="fas fa-heartbeat"></i> FDA-Cleared • HIPAA Compliant • Real-Time AI</div>
+            <h1>Predict Arrhythmias <span class="highlight">Before They Strike</span></h1>
+            <p>Continuous ECG telemetry that filters artifacts and analyzes every heartbeat in real-time — alerting cardiologists to atrial fibrillation and other cardiac anomalies before they become emergencies.</p>
+            <div class="hero-buttons">
+                <a href="#getstarted" class="btn-primary"><i class="fas fa-heartbeat"></i> Start Free Trial</a>
+                <a href="#platform" class="btn-secondary">Explore the Platform</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <div class="number">99.4%</div>
+                    <div class="label">Arrhythmia Detection Accuracy</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">&lt;2s</div>
+                    <div class="label">Alert Latency</div>
+                </div>
+                <div class="stat-item">
+                    <div class="number">48K+</div>
+                    <div class="label">Patients Monitored</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WHAT WE DO ===== -->
+    <section id="what" class="what-we-do">
+        <div class="container">
+            <div class="wwd-grid">
+                <div class="text">
+                    <h3>Every Heartbeat <span style="color:#e11d48;">Analyzed. Every Anomaly Caught.</span></h3>
+                    <p><strong>The Challenge:</strong> Traditional ECG monitoring relies on intermittent snapshots or delayed analysis. Critical arrhythmias like atrial fibrillation can develop silently between recordings — putting patients at risk of stroke and heart failure.</p>
+                    <p><strong>The CardioStream Solution:</strong> Our AI continuously ingests <strong>live ECG data streams from wearable medical patches</strong>, filtering out motion artifacts and electrical noise to deliver clean, analyzable signals. Deep learning models detect <strong>atrial fibrillation, ventricular tachycardia, and other arrhythmias</strong> with 99.4% accuracy — alerting cardiologists in under 2 seconds.</p>
+                    <p style="font-weight:600; color:#e11d48;">✅ 99.4% Accuracy • ✅ &lt;2s Alert • ✅ Artifact Filtering</p>
+                </div>
+                <div class="visual">
+                    <div class="heart-bg">❤️</div>
+                    <i class="fas fa-heartbeat"></i>
+                    <p style="font-size:1.2rem; font-weight:600; color:#0a1628;">Real-Time ECG Intelligence</p>
+                    <p><span class="highlight-text">💓 Live ECG Stream</span> → <span class="highlight-text">⚡ AI Analysis</span> → <span class="highlight-text">🚨 Cardiologist Alert</span></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PLATFORM (AI FEATURES) ===== -->
+    <section id="platform" class="platform">
+        <div class="container">
+            <h2 class="section-title">The <span class="highlight">Cardiac AI</span> Stack</h2>
+            <p class="section-sub">Four AI layers that transform continuous ECG data into actionable cardiac intelligence.</p>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="icon-wrapper"><i class="fas fa-wave-square"></i></div>
+                    <h4>Artifact Filtering Engine</h4>
+                    <p>AI filters out motion artifacts, electrical interference, and poor electrode contact — ensuring only clean, analyzable ECG signals reach the diagnostic algorithms.</p>
+                    <span class="tag">Signal Processing</span>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrapper"><i class="fas fa-brain"></i></div>
+                    <h4>Deep Learning Arrhythmia Detection</h4>
+                    <p>CNNs and recurrent neural networks trained on 10M+ annotated ECG strips detect atrial fibrillation, ventricular tachycardia, and 20+ other arrhythmias.</p>
+                    <span class="tag">CNN • RNN • 99.4%</span>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrapper"><i class="fas fa-bell"></i></div>
+                    <h4>Real-Time Alert System</h4>
+                    <p>When an anomaly is detected, the system instantly alerts on-call cardiologists via SMS, email, and app notification — with the full ECG strip attached for immediate review.</p>
+                    <span class="tag">Real-Time • &lt;2s</span>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-wrapper"><i class="fas fa-history"></i></div>
+                    <h4>Longitudinal Rhythm Analytics</h4>
+                    <p>AI tracks arrhythmia burden over time — identifying patterns, triggers, and trends to support treatment optimization and risk stratification.</p>
+                    <span class="tag">Longitudinal</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ECG DASHBOARD SIMULATOR ===== -->
+    <section class="ecg-dash">
+        <div class="container">
+            <div class="dash-main">
+                <div class="dash-header">
+                    <span class="status-text"><i class="fas fa-circle" style="color:#22c55e;"></i> LIVE — CardioStream Monitoring Console</span>
+                    <span style="color:#64748b;">AI Confidence: 99.2%</span>
+                </div>
+                <div class="ecg-monitor">
+                    <div class="ecg-grid"></div>
+                    <div class="ecg-label">LEAD II — CONTINUOUS ECG</div>
+                    <div class="ecg-hr">72 <span>BPM</span></div>
+                    <div class="ecg-line">
+                        <svg viewBox="0 0 1000 120" preserveAspectRatio="none">
+                            <polyline class="wave" points="0,60 20,60 30,60 35,60 40,20 45,100 50,60 65,60 75,60 80,60 85,25 90,95 95,60 110,60 125,60 135,60 140,30 145,90 150,60 165,60 180,60 190,60 195,25 200,95 205,60 220,60 235,60 245,60 250,30 255,90 260,60 275,60 290,60 300,60 305,20 310,100 315,60 330,60 345,60 355,60 360,30 365,90 370,60 385,60 400,60 410,60 415,25 420,95 425,60 440,60 455,60 465,60 470,30 475,90 480,60 495,60 510,60 520,60 525,20 530,100 535,60 550,60 565,60 575,60 580,25 585,95 590,60 605,60 620,60 630,60 635,30 640,90 645,60 660,60 675,60 685,60 690,25 695,95 700,60 715,60 730,60 740,60 745,30 750,90 755,60 770,60 785,60 795,60 800,20 805,100 810,60 825,60 840,60 850,60 855,30 860,90 865,60 880,60 895,60 905,60 910,25 915,95 920,60 935,60 950,60 960,60 965,30 970,90 975,60 990,60 1000,60" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="patient-grid" id="patientGrid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+            <div class="dash-sidebar">
+                <h4><i class="fas fa-chart-bar" style="color:#e11d48;"></i> Monitoring Metrics</h4>
+                <div class="metric-item"><span>💓 Patients Live</span><span class="value good" id="patientsLive">48</span></div>
+                <div class="metric-item"><span>⚠️ Anomalies Detected</span><span class="value warning" id="anomaliesDetected">3</span></div>
+                <div class="metric-item"><span>🚨 Critical Alerts</span><span class="value danger" id="criticalAlerts">1</span></div>
+                <div class="metric-item"><span>📊 Avg. Detection Time</span><span class="value good" id="avgDetection">1.8s</span></div>
+                <div style="margin-top:12px;">
+                    <h4><i class="fas fa-bell" style="color:#e11d48;"></i> Live Alerts</h4>
+                    <div id="dashAlerts">
+                        <div class="alert-item">
+                            <span class="alert-icon danger"><i class="fas fa-exclamation"></i></span>
+                            <div><strong style="color:#ef4444;">AFib Detected</strong><br />Patient #C-4821 — HR 142</div>
+                            <span class="alert-time">12s ago</span>
+                        </div>
+                        <div class="alert-item">
+                            <span class="alert-icon warning"><i class="fas fa-exclamation-triangle"></i></span>
+                            <div><strong style="color:#f59e0b;">PVC Run Detected</strong><br />Patient #C-2917 — 6 PVCs</div>
+                            <span class="alert-time">2 min ago</span>
+                        </div>
+                        <div class="alert-item">
+                            <span class="alert-icon success"><i class="fas fa-check"></i></span>
+                            <div><strong style="color:#22c55e;">Normal Sinus Rhythm</strong><br />Patient #C-1034 — HR 68</div>
+                            <span class="alert-time">5 min ago</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="accuracy-bar">
+                    <div class="bar-label">
+                        <span>Detection Accuracy</span>
+                        <span id="accuracyLabel">99%</span>
+                    </div>
+                    <div class="bar-track"><div class="fill" id="accuracyFill" style="width:99%;"></div></div>
+                    <div style="font-size:0.7rem; color:#94a3b8; margin-top:4px;">
+                        <i class="fas fa-shield-alt"></i> FDA 510(k) cleared algorithm
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WHY CARDIOSTREAM ===== -->
+    <section id="why" class="why">
+        <div class="container">
+            <h2 class="section-title">The <span class="highlight">Cardiac Monitoring</span> Impact</h2>
+            <p class="section-sub">Real outcomes from cardiology practices using our platform.</p>
+            <div class="why-grid">
+                <div class="why-item">
+                    <div class="number">99.4%</div>
+                    <p>Arrhythmia detection accuracy — reducing missed diagnoses</p>
+                </div>
+                <div class="why-item">
+                    <div class="number">&lt;2s</div>
+                    <p>Alert latency from anomaly onset to cardiologist notification</p>
+                </div>
+                <div class="why-item">
+                    <div class="number">67%</div>
+                    <p>Reduction in emergency department visits for AFib patients</p>
+                </div>
+                <div class="why-item">
+                    <div class="number">48K+</div>
+                    <p>Patients continuously monitored across partner practices</p>
+                </div>
+            </div>
+            <div style="text-align:center; margin-top:30px; background:#ffe4e6; padding:24px; border-radius:20px; border:1px solid rgba(225,29,72,0.08);">
+                <p style="font-size:1.1rem; font-weight:500; color:#e11d48;"><i class="fas fa-heart"></i> "Every second saved in arrhythmia detection is a potential stroke prevented."</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WHO WE SERVE ===== -->
+    <section id="serve" class="serve">
+        <div class="container">
+            <h2 class="section-title">Built for <span class="highlight">Cardiac Care</span></h2>
+            <p class="section-sub">CardioStream empowers every stakeholder in cardiovascular medicine.</p>
+            <div class="serve-grid">
+                <div class="serve-card">
+                    <i class="fas fa-user-md"></i>
+                    <h4>Cardiologists</h4>
+                    <p>Monitor patients continuously with AI-filtered ECG data and real-time arrhythmia alerts.</p>
+                </div>
+                <div class="serve-card">
+                    <i class="fas fa-hospital"></i>
+                    <h4>Hospitals & Health Systems</h4>
+                    <p>Reduce readmissions and improve outcomes with continuous remote cardiac monitoring.</p>
+                </div>
+                <div class="serve-card">
+                    <i class="fas fa-clinic-medical"></i>
+                    <h4>Outpatient Clinics</h4>
+                    <p>Extend care beyond the office with wearable ECG patches and cloud-based monitoring.</p>
+                </div>
+                <div class="serve-card">
+                    <i class="fas fa-flask"></i>
+                    <h4>Clinical Research</h4>
+                    <p>Collect high-quality, continuous ECG data for cardiac safety and efficacy trials.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== TESTIMONIALS ===== -->
+    <section id="testimonials" class="testimonials">
+        <div class="container">
+            <h2 class="section-title">What <span class="highlight">Cardiologists</span> Say</h2>
+            <p class="section-sub">Trusted by leading cardiac centers worldwide.</p>
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="quote">“CardioStream alerted me to an AFib episode 45 minutes before my patient felt any symptoms. We started anticoagulation immediately and prevented a likely stroke. This technology saves lives.”</p>
+                    <p class="author">— Dr. Sarah Mitchell</p>
+                    <p class="role">Electrophysiologist, Mayo Clinic</p>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="quote">“The artifact filtering is remarkable. Motion noise that would normally trigger false alarms is completely removed. Our alert fatigue dropped by 78% in the first month.”</p>
+                    <p class="author">— Dr. James Park</p>
+                    <p class="role">Director of Cardiac Telemetry, Cleveland Clinic</p>
+                </div>
+                <div class="testimonial-card">
+                    <div class="stars">★★★★★</div>
+                    <p class="quote">“We reduced AFib-related ER visits by 67% in our patient population. Continuous monitoring with real-time alerts is now our standard of care for high-risk patients.”</p>
+                    <p class="author">— Dr. Elena Rodriguez</p>
+                    <p class="role">Chief of Cardiology, Mass General Brigham</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== TEAM ===== -->
+    <section id="team" class="team">
+        <div class="container">
+            <h2 class="section-title">The <span class="highlight">Cardiac AI</span> Team</h2>
+            <p class="section-sub">Cardiologists, AI researchers, and biomedical engineers united to save hearts.</p>
+            <div class="team-grid">
+                <div class="team-card">
+                    <img src="https://randomuser.me/api/portraits/women/72.jpg" alt="Dr. Aisha Patel" class="avatar-img" />
+                    <h4>Dr. Aisha Patel</h4>
+                    <p class="title">CEO & Co-Founder</p>
+                    <p class="bio">Board-certified cardiologist with 15+ years in electrophysiology. Former faculty at Stanford.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-x-twitter"></i></a>
+                    </div>
+                </div>
+                <div class="team-card">
+                    <img src="https://randomuser.me/api/portraits/men/42.jpg" alt="Dr. Michael Chen" class="avatar-img" />
+                    <h4>Dr. Michael Chen</h4>
+                    <p class="title">CTO & Co-Founder</p>
+                    <p class="bio">AI/ML Ph.D. specializing in biomedical signal processing and deep learning.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+                <div class="team-card">
+                    <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Dr. Lisa Okafor" class="avatar-img" />
+                    <h4>Dr. Lisa Okafor</h4>
+                    <p class="title">Head of Clinical Research</p>
+                    <p class="bio">Cardiologist with expertise in remote monitoring and clinical trial design.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="team-card">
+                    <img src="https://randomuser.me/api/portraits/men/55.jpg" alt="David Kim" class="avatar-img" />
+                    <h4>David Kim</h4>
+                    <p class="title">VP of Product</p>
+                    <p class="bio">Product leader with deep experience in medical devices and health IT platforms.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-x-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CONTACT ===== -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">Ready to <span class="highlight">Monitor</span> Your Patients Continuously?</h2>
+            <p class="section-sub">Tell us about your practice, and we'll show you how CardioStream can help.</p>
+            <div class="contact-wrap">
+                <form class="contact-form" id="contactForm">
+                    <input type="text" placeholder="Full Name" required />
+                    <input type="text" placeholder="Practice / Health System" required />
+                    <input type="email" placeholder="Work Email" required />
+                    <input type="tel" placeholder="Phone Number" />
+                    <select>
+                        <option value="">Select your primary role</option>
+                        <option>Cardiologist</option>
+                        <option>Electrophysiologist</option>
+                        <option>Cardiac Telemetry Director</option>
+                        <option>Hospital Administrator</option>
+                        <option>Clinical Researcher</option>
+                    </select>
+                    <input type="text" placeholder="Number of patients to be monitored" />
+                    <textarea placeholder="Describe your cardiac monitoring challenges (AFib detection, alert fatigue, patient compliance, etc.)"></textarea>
+                    <button type="submit" class="btn-primary" style="width:100%;"><i class="fas fa-heartbeat"></i> Request a Demo</button>
+                </form>
+                <div class="contact-info">
+                    <p><i class="fas fa-envelope"></i> info@cardioststream.ai</p>
+                    <p><i class="fas fa-phone-alt"></i> +1 (888) 555-ECG (324) – 24/7 support</p>
+                    <p><i class="fas fa-map-pin"></i> 440 Heart Way, Suite 300, Boston, MA 02115</p>
+                    <div class="emergency-box">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Urgent Cardiac Alert</h4>
+                        <p>For active cardiac emergencies detected by the system, our on-call cardiology team is available 24/7. <strong>We prioritize life-threatening arrhythmias.</strong></p>
+                        <p style="color:#ef4444; font-weight:600;">+1 (888) 555-ECG (324) ext. 911</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== GET STARTED ===== -->
+    <section id="getstarted" class="get-started">
+        <div class="container">
+            <h2>Start <span class="highlight">Monitoring</span> Your Patients Today</h2>
+            <p>Deploy CardioStream in your practice in days. Start detecting arrhythmias in real-time.</p>
+            <div class="steps">
+                <div class="step">
+                    <div class="num">1</div>
+                    <h4>Connect</h4>
+                    <p>Integrate CardioStream with your EHR and provide wearable ECG patches to patients.</p>
+                </div>
+                <div class="step">
+                    <div class="num">2</div>
+                    <h4>Monitor</h4>
+                    <p>Our AI continuously analyzes live ECG streams, filtering artifacts and detecting anomalies.</p>
+                </div>
+                <div class="step">
+                    <div class="num">3</div>
+                    <h4>Alert</h4>
+                    <p>Receive real-time alerts with full ECG strips whenever an arrhythmia is detected.</p>
+                </div>
+            </div>
+            <a href="#contact" class="btn-primary" style="background:linear-gradient(135deg, #fb7185, #e11d48); box-shadow: 0 8px 30px rgba(225,29,72,0.4);"><i class="fas fa-rocket"></i> Start Your Free Trial</a>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <div class="logo" style="color:#fff; font-size:1.6rem;"><span class="heart-icon" style="color:#fb7185;">❤️</span>Cardio<span style="color:#fb7185;">Stream</span></div>
+                    <p style="margin-top:10px; max-width:280px; font-size:0.95rem;">AI-powered continuous ECG telemetry and real-time arrhythmia prediction for cardiac care.</p>
+                </div>
+                <div>
+                    <h4>Platform</h4>
+                    <a href="#platform">AI Features</a>
+                    <a href="#why">Why CardioStream</a>
+                    <a href="#testimonials">Case Studies</a>
+                    <a href="#contact">Support</a>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">HIPAA Compliance</a>
+                    <a href="#">FDA Clearance</a>
+                </div>
+                <div>
+                    <h4>Connect</h4>
+                    <div class="social">
+                        <i class="fab fa-linkedin"></i>
+                        <i class="fab fa-youtube"></i>
+                        <i class="fab fa-x-twitter"></i>
+                        <i class="fab fa-github"></i>
+                    </div>
+                    <p style="margin-top:12px; font-size:0.85rem;">📬 info@cardioststream.ai</p>
+                    <p style="font-size:0.85rem;">📞 +1 (888) 555-ECG</p>
+                </div>
+            </div>
+            <div class="bottom">
+                <span>&copy; 2026 CardioStream. All rights reserved.</span>
+                <span><i class="fas fa-heartbeat" style="color:#fb7185;"></i> AI for cardiac care</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ===== JAVASCRIPT ===== -->
+    <script>
+        // Hamburger toggle
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('navLinks');
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('open');
+        });
+
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('open');
+            });
+        });
+
+        // ===== PATIENT GRID SIMULATOR =====
+        const patientGrid = document.getElementById('patientGrid');
+
+        const patients = [
+            { id: 'C-4821', name: 'Margaret W.', rhythm: 'AFib', status: 'danger', hr: 142 },
+            { id: 'C-2917', name: 'Robert J.', rhythm: 'PVC Run', status: 'warning', hr: 88 },
+            { id: 'C-1034', name: 'Alice M.', rhythm: 'Normal Sinus', status: 'good', hr: 68 },
+            { id: 'C-7756', name: 'David C.', rhythm: 'Normal Sinus', status: 'good', hr: 72 },
+            { id: 'C-5512', name: 'Sarah L.', rhythm: 'Bradycardia', status: 'warning', hr: 48 },
+            { id: 'C-8890', name: 'James P.', rhythm: 'Normal Sinus', status: 'good', hr: 76 },
+            { id: 'C-3344', name: 'Emily R.', rhythm: 'Tachycardia', status: 'warning', hr: 118 },
+            { id: 'C-9921', name: 'Michael S.', rhythm: 'Normal Sinus', status: 'good', hr: 65 },
+        ];
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase();
+        }
+
+        function renderPatients() {
+            let html = '';
+            patients.forEach(p => {
+                let avatarClass = '';
+                let rhythmClass = '';
+                if (p.status === 'danger') {
+                    avatarClass = 'danger';
+                    rhythmClass = 'afib';
+                } else if (p.status === 'warning') {
+                    avatarClass = 'warning';
+                    rhythmClass = 'warning';
+                }
+                html += `
+                    <div class="patient-card">
+                        <div class="patient-avatar ${avatarClass}">${getInitials(p.name)}</div>
+                        <div class="patient-info">
+                            <div class="patient-name">${p.name}</div>
+                            <div class="patient-rhythm ${rhythmClass}">${p.rhythm} • ${p.hr} BPM</div>
+                        </div>
+                    </div>
+                `;
+            });
+            patientGrid.innerHTML = html;
+        }
+
+        renderPatients();
+
+        // Update patients every 6 seconds (simulate AI detecting changes)
+        setInterval(() => {
+            patients.forEach(p => {
+                // Random HR variation
+                p.hr = Math.max(40, Math.min(180, p.hr + Math.floor(Math.random() * 10 - 5)));
+
+                // Randomly change status/rhythm
+                if (Math.random() < 0.3) {
+                    const r = Math.random();
+                    if (r < 0.15) {
+                        p.rhythm = 'AFib';
+                        p.status = 'danger';
+                        p.hr = Math.floor(120 + Math.random() * 40);
+                    } else if (r < 0.35) {
+                        p.rhythm = 'PVC Run';
+                        p.status = 'warning';
+                    } else if (r < 0.5) {
+                        p.rhythm = 'Tachycardia';
+                        p.status = 'warning';
+                        p.hr = Math.floor(100 + Math.random() * 30);
+                    } else if (r < 0.6) {
+                        p.rhythm = 'Bradycardia';
+                        p.status = 'warning';
+                        p.hr = Math.floor(40 + Math.random() * 10);
+                    } else {
+                        p.rhythm = 'Normal Sinus';
+                        p.status = 'good';
+                        p.hr = Math.floor(60 + Math.random() * 20);
+                    }
+                }
+            });
+            renderPatients();
+
+            // Update metrics
+            const patientsLive = document.getElementById('patientsLive');
+            const anomaliesDetected = document.getElementById('anomaliesDetected');
+            const criticalAlerts = document.getElementById('criticalAlerts');
+            const avgDetection = document.getElementById('avgDetection');
+
+            if (patientsLive) patientsLive.textContent = Math.floor(45 + Math.random() * 8);
+            if (anomaliesDetected) anomaliesDetected.textContent = Math.floor(2 + Math.random() * 4);
+            if (criticalAlerts) criticalAlerts.textContent = Math.floor(0 + Math.random() * 3);
+            if (avgDetection) avgDetection.textContent = `${(1.2 + Math.random() * 1.2).toFixed(1)}s`;
+
+            // Update ECG heart rate display
+            const hrDisplay = document.querySelector('.ecg-hr');
+            if (hrDisplay) {
+                hrDisplay.innerHTML = `${Math.floor(65 + Math.random() * 20)} <span>BPM</span>`;
+            }
+
+            // Update alerts
+            const dashAlerts = document.getElementById('dashAlerts');
+            if (dashAlerts && dashAlerts.children.length > 0) {
+                const alerts = [
+                    { icon: 'danger', iconClass: 'fa-exclamation', text: 'AFib Detected', sub: 'Patient #C-4821 — HR 142', time: 'Just now' },
+                    { icon: 'warning', iconClass: 'fa-exclamation-triangle', text: 'PVC Run Detected', sub: 'Patient #C-2917 — 6 PVCs', time: '1 min ago' },
+                    { icon: 'success', iconClass: 'fa-check', text: 'Normal Sinus Rhythm', sub: 'Patient #C-1034 — HR 68', time: '3 min ago' },
+                    { icon: 'danger', iconClass: 'fa-exclamation', text: 'Tachycardia Alert', sub: 'Patient #C-3344 — HR 128', time: '4 min ago' },
+                    { icon: 'warning', iconClass: 'fa-exclamation-triangle', text: 'Bradycardia Alert', sub: 'Patient #C-5512 — HR 46', time: '6 min ago' },
+                ];
+                const firstAlert = dashAlerts.children[0];
+                if (firstAlert) {
+                    const alertData = alerts[Math.floor(Math.random() * alerts.length)];
+                    const iconDiv = firstAlert.querySelector('.alert-icon');
+                    const textDiv = firstAlert.querySelector('div');
+                    const timeSpan = firstAlert.querySelector('.alert-time');
+
+                    iconDiv.className = `alert-icon ${alertData.icon}`;
+                    iconDiv.innerHTML = `<i class="fas ${alertData.iconClass}"></i>`;
+                    textDiv.innerHTML = `<strong style="color:${alertData.icon === 'danger' ? '#ef4444' : alertData.icon === 'warning' ? '#f59e0b' : '#22c55e'};">${alertData.text}</strong><br />${alertData.sub}`;
+                    timeSpan.textContent = alertData.time;
+
+                    dashAlerts.appendChild(firstAlert);
+                }
+            }
+
+            // Update accuracy bar
+            const accuracyFill = document.getElementById('accuracyFill');
+            const accuracyLabel = document.getElementById('accuracyLabel');
+            if (accuracyFill) {
+                const acc = Math.floor(97 + Math.random() * 3);
+                accuracyFill.style.width = `${acc}%`;
+                accuracyLabel.textContent = `${acc}%`;
+            }
+        }, 6000);
+
+        // Contact form
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('✅ Your demo request has been received! A CardioStream specialist will contact you within 2 hours.');
+            this.reset();
+        });
+    </script>
+
+</body>
+</html>
